@@ -27,6 +27,17 @@ function SnipeAuctionator:Initialize()
     print("SnipeAuctionator: Initialization complete. Ready to snipe!")
 end
 
+local function findFromBag(itemID)
+    for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
+       for slot = 1, C_Container.GetContainerNumSlots(bag) do
+          local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
+          if itemInfo and itemInfo.itemID == itemID then
+			return ItemLocation:CreateFromBagAndSlot(bag, slot)
+          end
+       end
+    end
+end
+
 -- Create the Snipe UI
 function SnipeAuctionator:CreateSnipeUI(parent)
     print("SnipeAuctionator: Creating snipe UI")
@@ -51,6 +62,35 @@ function SnipeAuctionator:CreateSnipeUI(parent)
         if currentSnipePrice ~= snipeFrame.price.lastSnipePrice then
             snipeFrame.price.lastSnipePrice = currentSnipePrice
             self.itemMaxPrices[snipeFrame.itemID] = currentSnipePrice
+        end
+    end)
+
+    -- Create bait price input
+    snipeFrame.baitPrice = CreateFrame("Frame", nil, snipeFrame, "AuctionatorConfigurationMoneyInputAlternate")
+    snipeFrame.baitPrice:SetPoint("TOPLEFT", snipeFrame.price, "TOPLEFT", 0, -50)
+    snipeFrame.baitPrice:SetAmount(0)
+
+    -- Update bait price on change
+    snipeFrame.baitPrice:SetScript("OnUpdate", function()
+        local currentBaitPrice = snipeFrame.baitPrice:GetAmount()
+        if currentBaitPrice ~= snipeFrame.baitPrice.lastBaitPrice then
+            snipeFrame.baitPrice.lastBaitPrice = currentBaitPrice
+        end
+    end)
+
+    snipeFrame.baitPrice.button = CreateFrame("Button", nil, parent, "UIPanelDynamicResizeButtonTemplate")
+    snipeFrame.baitPrice.button:SetEnabled(true)
+    snipeFrame.baitPrice.button:SetSize(100, 20)
+    snipeFrame.baitPrice.button:SetPoint("BOTTOMLEFT", snipeFrame.baitPrice, "BOTTOMLEFT", 135, -50)
+    snipeFrame.baitPrice.button:SetText("Bait Now")
+    snipeFrame.baitPrice.button:SetScript("OnClick", function()
+        local loc = findFromBag(snipeFrame.itemID)
+        local quantity = 1
+        local price = snipeFrame.baitPrice:GetAmount() or 1
+        if loc then
+            C_AuctionHouse.PostCommodity(loc, 1, quantity, price)
+        else
+            DEFAULT_CHAT_FRAME:AddMessage("No item in bag", 1, 1, 0)
         end
     end)
 
