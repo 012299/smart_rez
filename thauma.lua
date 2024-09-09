@@ -28,11 +28,9 @@ btn:RegisterForClicks("AnyUp","AnyDown")
 btn:SetScript("OnClick", function()
 
 		local castEndTime = select(5, UnitCastingInfo("player"))
-
 		if castEndTime then
-
 			if castEndTime > GetTime() * 1000 then
-				-- print("Remaining cast time: " .. castEndTime - GetTime()*1000 .. "ms")
+				print("Remaining cast time: " .. castEndTime - GetTime() * 1000 .. "ms")
 				return
 			end
 		end
@@ -47,6 +45,5 @@ btn:SetScript("OnClick", function()
             C_TradeSkillUI.CraftSalvage(430315, casts, itemLoc)
       else
             print("No valid items in bags")
-            C_Container.SortBags()
       end
 end)

@@ -97,6 +97,15 @@ function SnipeAuctionator:CreateSnipeUI(parent)
     return snipeFrame
 end
 
+local function preHookFunction(func, preHookAction)
+    return function(...)
+        if preHookAction then
+            preHookAction(...)
+        end
+        return func(...)
+    end
+end
+
 -- Hook into Auctionator's Buy Commodity Frame
 function SnipeAuctionator:HookAuctionatorBuyCommodityFrame()
     if self.hooksInitialized then return true end
@@ -116,6 +125,14 @@ function SnipeAuctionator:HookAuctionatorBuyCommodityFrame()
         end
         originalOnEvent(self, event, ...)
     end
+    local originalBuyClicked = AucMix.BuyClicked
+    AucMix.BuyClicked = function(self, ...)
+        if self.results == nil then
+            return
+        end
+        print("SnipeAuctionator: BuyClicked pre hook called")
+        originalBuyClicked(self, ...)
+    end
 
     -- Hook into OnLoad and create the snipe UI
     hooksecurefunc(AucMix, "OnLoad", function(frame)
@@ -124,7 +141,6 @@ function SnipeAuctionator:HookAuctionatorBuyCommodityFrame()
 
         -- Hook into BuyClicked
         hooksecurefunc(frame, "BuyClicked", function()
-            print("SnipeAuctionator: Buy buwtton clicked")
             frame.DetailsContainer.BuyButton:SetText("Buying...")
             frame.DetailsContainer.BuyButton:Disable()
             if frame.WidePriceRangeWarningDialog then
