@@ -30,7 +30,7 @@ btn:SetScript("OnClick", function()
 		local castEndTime = select(5, UnitCastingInfo("player"))
 		if castEndTime then
 			if castEndTime > GetTime() * 1000 then
-				print("Remaining cast time: " .. castEndTime - GetTime() * 1000 .. "ms")
+				-- print("Remaining cast time: " .. castEndTime - GetTime() * 1000 .. "ms")
 				return
 			end
 		end
