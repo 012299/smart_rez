@@ -1,0 +1,7 @@
+## Interface: 110000
+## Title: smart_rez
+## Dependencies: Auctionator
+core.lua
+thauma.lua
+greenDe.lua
+snipeAuctionator.lua
