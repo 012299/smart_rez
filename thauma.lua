@@ -7,6 +7,7 @@ local thauma = {
     [211802] = true, --ominous transmutagen
     [211804] = true, --volatile transmutagen
     [211803] = true, --Mercurial transmutagen
+    [212667] = true, --Gloom Chitin r1
     -- [210930] = true, --bismuth r1
  }
 local function findItem()
