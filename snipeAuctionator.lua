@@ -8,8 +8,8 @@ SnipeAuctionator.hooksInitialized = false
 -- Initialize item data
 local function InitializeItemData()
     SnipeAuctionator.itemMaxPrices = {
-        [210796] = 270000, -- Mycobloom
-        [224828] = 270000, -- Weavercloth r1
+        [210796] = 210000, -- Mycobloom
+        [224828] = 210000, -- Weavercloth r1
     }
     SnipeAuctionator.itemSnipeQuantities = {
         [210796] = 200, -- Mycobloom
@@ -134,6 +134,20 @@ function SnipeAuctionator:HookAuctionatorBuyCommodityFrame()
         originalBuyClicked(self, ...)
     end
 
+    local originalUpdateView = AucMix.UpdateView
+    AucMix.UpdateView = function(self, ...)
+        if self.expectedItemID then
+            local savedQuantity = SnipeAuctionator.itemSnipeQuantities[self.expectedItemID]
+            if self.selectedQuantity ~= 1 then
+                savedQuantity = self.selectedQuantity
+                SnipeAuctionator.itemSnipeQuantities[self.expectedItemID] = self.selectedQuantity
+            end
+            self.selectedQuantity = savedQuantity
+        end
+        print("SnipeAuctionator: UpdateView pre hook called")
+        originalUpdateView(self, ...)
+    end
+
     -- Hook into OnLoad and create the snipe UI
     hooksecurefunc(AucMix, "OnLoad", function(frame)
         print("SnipeAuctionator: Hooked into AuctionatorBuyCommodityFrameTemplateMixin.OnLoad")
@@ -199,7 +213,6 @@ function SnipeAuctionator:RegisterEvents()
         elseif eventName == "COMMODITY_SEARCH_RESULTS_UPDATED" then
             AuctionatorBuyCommodityFrame.SnipeFrame.itemID = eventData
             AuctionatorBuyCommodityFrame.SnipeFrame.price:SetAmount(self.itemMaxPrices[eventData] or 0)
-            AuctionatorBuyCommodityFrame.selectedQuantity = self.itemSnipeQuantities[eventData] or 0
         elseif eventName == "AUCTION_HOUSE_SHOW" then
             SnipeAuctionator:HookAuctionatorBuyCommodityFrame()
         end
