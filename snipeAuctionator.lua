@@ -142,7 +142,7 @@ function SnipeAuctionator:HookAuctionatorBuyCommodityFrame()
                 savedQuantity = self.selectedQuantity
                 SnipeAuctionator.itemSnipeQuantities[self.expectedItemID] = self.selectedQuantity
             end
-            self.selectedQuantity = savedQuantity
+            self.selectedQuantity = savedQuantity or 1
         end
         print("SnipeAuctionator: UpdateView pre hook called")
         originalUpdateView(self, ...)
