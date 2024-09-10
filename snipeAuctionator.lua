@@ -144,7 +144,6 @@ function SnipeAuctionator:HookAuctionatorBuyCommodityFrame()
             end
             self.selectedQuantity = savedQuantity or 1
         end
-        print("SnipeAuctionator: UpdateView pre hook called")
         originalUpdateView(self, ...)
     end
 
