@@ -137,14 +137,21 @@ function SnipeAuctionator:HookAuctionatorBuyCommodityFrame()
     local originalUpdateView = AucMix.UpdateView
     AucMix.UpdateView = function(self, ...)
         if self.expectedItemID then
+            -- Check if the item has a saved quantity in the table
             local savedQuantity = SnipeAuctionator.itemSnipeQuantities[self.expectedItemID]
-            if self.selectedQuantity ~= 1 then
-                savedQuantity = self.selectedQuantity
+            -- Only update selectedQuantity during initialization
+            if isInitializing then
+                self.selectedQuantity = savedQuantity or 1
+            end
+            -- If the user modifies the quantity and it's not 1, save it
+            if self.selectedQuantity ~= 1 and self.selectedQuantity ~= savedQuantity then
                 SnipeAuctionator.itemSnipeQuantities[self.expectedItemID] = self.selectedQuantity
             end
-            self.selectedQuantity = savedQuantity or 1
         end
+        -- Call the original function
         originalUpdateView(self, ...)
+        -- Clear the initialization flag after the view is updated
+        isInitializing = false
     end
 
     -- Hook into OnLoad and create the snipe UI
@@ -212,6 +219,7 @@ function SnipeAuctionator:RegisterEvents()
         elseif eventName == "COMMODITY_SEARCH_RESULTS_UPDATED" then
             AuctionatorBuyCommodityFrame.SnipeFrame.itemID = eventData
             AuctionatorBuyCommodityFrame.SnipeFrame.price:SetAmount(self.itemMaxPrices[eventData] or 0)
+            isInitializing = true
         elseif eventName == "AUCTION_HOUSE_SHOW" then
             SnipeAuctionator:HookAuctionatorBuyCommodityFrame()
         end
