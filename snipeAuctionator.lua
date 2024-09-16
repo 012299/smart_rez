@@ -8,15 +8,22 @@ SnipeAuctionator.hooksInitialized = false
 -- Initialize item data
 local function InitializeItemData()
     if PriceMemory == nil then
-
-    PriceMemory = {
-        [210796] = 210000, -- Mycobloom
-        [224828] = 210000, -- Weavercloth r1
-    }
-    QuantityMemory = {
-        [210796] = 200, -- Mycobloom
-        [224828] = 200, -- Weavercloth r1
-    }
+        PriceMemory = {
+            [210796] = 210000, -- Mycobloom
+            [224828] = 210000, -- Weavercloth r1
+        }
+    end
+    if BaitMemory == nil then
+        BaitMemory = {
+            [210796] = 120000, -- Mycobloom
+            [224828] = 120000, -- Weavercloth r1
+        }
+    end
+    if QuantityMemory == nil then
+        QuantityMemory = {
+            [210796] = 200, -- Mycobloom
+            [224828] = 200, -- Weavercloth r1
+        }
     end
 end
 
@@ -56,14 +63,14 @@ function SnipeAuctionator:CreateSnipeUI(parent)
     -- Create price input
     snipeFrame.price = CreateFrame("Frame", nil, snipeFrame, "AuctionatorConfigurationMoneyInputAlternate")
     snipeFrame.price:SetPoint("TOPLEFT", snipeFrame, "TOPLEFT", -150, -20)
-    snipeFrame.price.lastSnipePrice = 0
+    local lastSnipePrice = 0
     snipeFrame.price:SetAmount(0)
 
     -- Update price on change
     snipeFrame.price:SetScript("OnUpdate", function()
         local currentSnipePrice = snipeFrame.price:GetAmount()
-        if currentSnipePrice ~= snipeFrame.price.lastSnipePrice then
-            snipeFrame.price.lastSnipePrice = currentSnipePrice
+        if currentSnipePrice ~= lastSnipePrice then
+            lastSnipePrice = currentSnipePrice
             PriceMemory[snipeFrame.itemID] = currentSnipePrice
         end
     end)
@@ -74,10 +81,12 @@ function SnipeAuctionator:CreateSnipeUI(parent)
     snipeFrame.baitPrice:SetAmount(0)
 
     -- Update bait price on change
+    local lastBaitPrice = 0
     snipeFrame.baitPrice:SetScript("OnUpdate", function()
         local currentBaitPrice = snipeFrame.baitPrice:GetAmount()
-        if currentBaitPrice ~= snipeFrame.baitPrice.lastBaitPrice then
-            snipeFrame.baitPrice.lastBaitPrice = currentBaitPrice
+        if currentBaitPrice ~= lastBaitPrice then
+            lastBaitPrice = currentBaitPrice
+            BaitMemory[snipeFrame.itemID] = currentBaitPrice
         end
     end)
 
@@ -224,6 +233,7 @@ function SnipeAuctionator:RegisterEvents()
             AuctionatorBuyCommodityFrame.SnipeFrame.itemID = eventData
             -- AuctionatorBuyCommodityFrame.SnipeFrame.price:SetAmount(self.itemMaxPrices[eventData] or 0)
             AuctionatorBuyCommodityFrame.SnipeFrame.price:SetAmount(PriceMemory[eventData] or 0)
+            AuctionatorBuyCommodityFrame.SnipeFrame.baitPrice:SetAmount(BaitMemory[eventData] or 0)
             SnipeAuctionator.isInitializing = true
         elseif eventName == "AUCTION_HOUSE_SHOW" then
             SnipeAuctionator:HookAuctionatorBuyCommodityFrame()
