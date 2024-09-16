@@ -7,14 +7,17 @@ SnipeAuctionator.hooksInitialized = false
 
 -- Initialize item data
 local function InitializeItemData()
-    SnipeAuctionator.itemMaxPrices = {
+    if PriceMemory == nil then
+
+    PriceMemory = {
         [210796] = 210000, -- Mycobloom
         [224828] = 210000, -- Weavercloth r1
     }
-    SnipeAuctionator.itemSnipeQuantities = {
+    QuantityMemory = {
         [210796] = 200, -- Mycobloom
         [224828] = 200, -- Weavercloth r1
     }
+    end
 end
 
 -- Initialize the addon
@@ -61,7 +64,7 @@ function SnipeAuctionator:CreateSnipeUI(parent)
         local currentSnipePrice = snipeFrame.price:GetAmount()
         if currentSnipePrice ~= snipeFrame.price.lastSnipePrice then
             snipeFrame.price.lastSnipePrice = currentSnipePrice
-            self.itemMaxPrices[snipeFrame.itemID] = currentSnipePrice
+            PriceMemory[snipeFrame.itemID] = currentSnipePrice
         end
     end)
 
@@ -120,7 +123,6 @@ function SnipeAuctionator:HookAuctionatorBuyCommodityFrame()
     local originalOnEvent = AucMix.OnEvent
     AucMix.OnEvent = function(self, event, ...)
         if event == "COMMODITY_PURCHASE_SUCCEEDED" then
-            -- print("SnipeAuctionator: COMMODITY_PURCHASE_SUCCEEDED event received")
             return
         end
         originalOnEvent(self, event, ...)
@@ -138,14 +140,16 @@ function SnipeAuctionator:HookAuctionatorBuyCommodityFrame()
     AucMix.UpdateView = function(self, ...)
         if self.expectedItemID then
             -- Check if the item has a saved quantity in the table
-            local savedQuantity = SnipeAuctionator.itemSnipeQuantities[self.expectedItemID]
+            --local savedQuantity = SnipeAuctionator.itemSnipeQuantities[self.expectedItemID]
+            local savedQuantity = QuantityMemory[self.expectedItemID]
             -- Only update selectedQuantity during initialization
             if SnipeAuctionator.isInitializing then
                 self.selectedQuantity = savedQuantity or 1
             end
             -- If the user modifies the quantity and it's not 1, save it
             if self.selectedQuantity ~= 1 and self.selectedQuantity ~= savedQuantity then
-                SnipeAuctionator.itemSnipeQuantities[self.expectedItemID] = self.selectedQuantity
+                -- SnipeAuctionator.itemSnipeQuantities[self.expectedItemID] = self.selectedQuantity
+                QuantityMemory[self.expectedItemID] = self.selectedQuantity
             end
         end
         -- Call the original function
@@ -218,7 +222,8 @@ function SnipeAuctionator:RegisterEvents()
             end
         elseif eventName == "COMMODITY_SEARCH_RESULTS_UPDATED" then
             AuctionatorBuyCommodityFrame.SnipeFrame.itemID = eventData
-            AuctionatorBuyCommodityFrame.SnipeFrame.price:SetAmount(self.itemMaxPrices[eventData] or 0)
+            -- AuctionatorBuyCommodityFrame.SnipeFrame.price:SetAmount(self.itemMaxPrices[eventData] or 0)
+            AuctionatorBuyCommodityFrame.SnipeFrame.price:SetAmount(PriceMemory[eventData] or 0)
             SnipeAuctionator.isInitializing = true
         elseif eventName == "AUCTION_HOUSE_SHOW" then
             SnipeAuctionator:HookAuctionatorBuyCommodityFrame()

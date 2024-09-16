@@ -1,6 +1,8 @@
 ## Interface: 110000
 ## Title: smart_rez
 ## Dependencies: Auctionator
+## SavedVariables: PriceMemory
+## SavedVariables: QuantityMemory
 core.lua
 thauma.lua
 greenDe.lua
