@@ -40,7 +40,7 @@ local castToStack = {
 }
 
 local function findItem()
-	for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
+	for bag = 1, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
 		for slot = 1, _C_GetContainerNumSlots(bag) do
 			local itemInfo = _C_GetContainerItemInfo(bag, slot)
 			if itemInfo then
@@ -72,13 +72,15 @@ ThaumaFrame.btn:SetScript("OnClick", function()
 	end
 	local castID, casts = findItem()
 	if castID then
+		ThaumaFrame:RegisterEvents()
 		currentTime = _GetTime()
 		_C_TradeSkillUI_CraftSalvage(castID, casts, salvageItem)
 		castStartTime = select(4, _UnitCastingInfo("player")) or 0
 		castEndTime = select(5, _UnitCastingInfo("player")) or 0
-		ThaumaFrame.unBlockButton = _GetTime() + ((castEndTime - castStartTime) / 1000) * casts + 1
+		ThaumaFrame.unBlockButton = _GetTime() + ((castEndTime - castStartTime) / 1000) * casts
 	else
 		currentTime = _GetTime()
+		ThaumaFrame:UnregisterAllEvents()
 		if currentTime - lastSortTime >= 10 then
 			_C_SortBags()
 			lastSortTime = currentTime
@@ -94,9 +96,8 @@ function ThaumaFrame:RegisterEvents()
 			if target == "player" then
 				ThaumaFrame.unBlockButton = _GetTime()
 				print("INTERRUPTED")
+				ThaumaFrame:UnregisterAllEvents()
 			end
     	end
     end)
 end
-
-ThaumaFrame:RegisterEvents()
