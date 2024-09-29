@@ -63,19 +63,24 @@ local castStartTime, castEndTime = nil, nil
 local unBlockButton = _GetTime()
 
 local btn = CreateFrame("Button", "thaumaButton", UIParent, "SecureActionButtonTemplate")
+-- sort bags before we create the button
+_C_SortBags()
 btn:RegisterForClicks("AnyUp", "AnyDown")
 btn:SetScript("OnClick", function()
-    if unBlockButton > _GetTime() then
-        return
-    end
+	if unBlockButton > _GetTime() then
+		return
+	end
 	local castID, casts = findItem()
-	print("castID", castID)
-	print("casts", casts)
 	if castID then
-        currentTime = _GetTime()
+		currentTime = _GetTime()
 		_C_TradeSkillUI_CraftSalvage(castID, casts, salvageItem)
-        castStartTime, castEndTime = select(4, _UnitCastingInfo("player"))
-        unBlockButton = _GetTime() + ((castEndTime - castStartTime)/1000)*casts + 1
+		castStartTime, castEndTime = select(4, _UnitCastingInfo("player"))
+		if not castStartTime then
+			-- cast not found, block for 2seconds to prevent spam
+			unBlockButton = _GetTime() + 2
+		else
+			unBlockButton = _GetTime() + ((castEndTime - castStartTime) / 1000) * casts + 1
+		end
 	else
 		currentTime = _GetTime()
 		if currentTime - lastSortTime >= 10 then
