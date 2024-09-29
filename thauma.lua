@@ -1,50 +1,91 @@
-local thauma = {
-    [224828] = true, --weavercloth r1
-    [228231] = true, --weavercloth r2
-    [228232] = true, --weavercloth r3
-    [210796] = true, --mycobloom r1
-    [210797] = true, --mycobloom r2
-    [211802] = true, --ominous transmutagen
-    [211804] = true, --volatile transmutagen
-    [211803] = true, --Mercurial transmutagen
-    [212667] = true, --Gloom Chitin r1
-    -- [210930] = true, --bismuth r1
- }
+local _C_GetContainerNumSlots = _G["C_Container"]["GetContainerNumSlots"]
+local _C_GetContainerItemInfo = _G["C_Container"]["GetContainerItemInfo"]
+local _C_SortBags = _G["C_Container"]["SortBags"]
+local _C_TradeSkillUI_CraftSalvage = _G["C_TradeSkillUI"]["CraftSalvage"]
+local _ItemLocation = _G["ItemLocation"]
+local _GetTime = _G["GetTime"]
+local _UnitCastingInfo = _G["UnitCastingInfo"]
+
+local salvageItem = ItemLocation:CreateEmpty()
+
+local cookingID = 445118
+local prospectID = 434018
+local thaumaID = 430315
+
+local itemToCast = {
+	-- thauma
+	[210796] = thaumaID, --mycobloom r1
+	[210797] = thaumaID, --mycobloom r2
+	[211802] = thaumaID, --ominous transmutagen
+	[211804] = thaumaID, --volatile transmutagen
+	[211803] = thaumaID, --Mercurial transmutagen
+	[212667] = thaumaID, --Gloom Chitin r1
+	[212668] = thaumaID, --Gloom Chitin r2
+	[212665] = thaumaID, --leather r2
+	[210937] = thaumaID, --iron claw r2
+	[210806] = thaumaID, -- blossom r2
+	-- cooking
+	[223512] = cookingID, --beef
+	[225911] = cookingID, --bee
+	-- prospect
+	[210934] = prospectID, -- aqr2
+	[210933] = prospectID, --aqr1
+}
+
+local castToStack = {
+	[thaumaID] = 20,
+	[cookingID] = 5,
+	[prospectID] = 5,
+}
+
 local function findItem()
-    for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
-       for slot = 1, C_Container.GetContainerNumSlots(bag) do
-          local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
-          if itemInfo then
-             if thauma[itemInfo.itemID] and itemInfo.stackCount >= 20 then
-                return ItemLocation:CreateFromBagAndSlot(bag, slot), math.floor(itemInfo.stackCount / 20)
-             end
-          end
-       end
-    end
+	for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
+		for slot = 1, _C_GetContainerNumSlots(bag) do
+			local itemInfo = _C_GetContainerItemInfo(bag, slot)
+			if itemInfo then
+				local castID = itemToCast[itemInfo.itemID]
+				if castID then
+					local castStack = castToStack[castID]
+					if itemInfo.stackCount >= castStack then
+						salvageItem:SetBagAndSlot(bag, slot)
+						return castID, math.floor(itemInfo.stackCount / castStack)
+					end
+				end
+			end
+		end
+	end
 end
 
 local lastSortTime = 0
-local btn = CreateFrame("Button", "thaumaButton", UIParent, "SecureActionButtonTemplate")
-btn:RegisterForClicks("AnyUp","AnyDown")
-btn:SetScript("OnClick", function()
+local currentTime = _GetTime()
+local blockButtonTime = _GetTime()
+local castStartTime, castEndTime = nil, nil
+local unBlockButton = _GetTime()
 
-		local castEndTime = select(5, UnitCastingInfo("player"))
-		if castEndTime then
-			if castEndTime > GetTime() * 1000 then
-				-- print("Remaining cast time: " .. castEndTime - GetTime() * 1000 .. "ms")
-				return
-			end
+local btn = CreateFrame("Button", "thaumaButton", UIParent, "SecureActionButtonTemplate")
+-- sort bags before we create the button
+_C_SortBags()
+btn:RegisterForClicks("AnyUp", "AnyDown")
+btn:SetScript("OnClick", function()
+	if unBlockButton > _GetTime() then
+		return
+	end
+	local castID, casts = findItem()
+	if castID then
+		currentTime = _GetTime()
+		_C_TradeSkillUI_CraftSalvage(castID, casts, salvageItem)
+		castStartTime, castEndTime = select(4, _UnitCastingInfo("player"))
+		if not castStartTime then
+			-- cast not found, block for 2seconds to prevent spam
+			unBlockButton = _GetTime() + 2
+		else
+			unBlockButton = _GetTime() + ((castEndTime - castStartTime) / 1000) * casts + 1
 		end
-      local currentTime = GetTime()
-      if currentTime - lastSortTime >= 10 then
-         C_Container.SortBags()
-         print("Sorting bags")
-         lastSortTime = currentTime
-      end
-      local itemLoc, casts = findItem()
-      if itemLoc and itemLoc:IsValid() then
-            C_TradeSkillUI.CraftSalvage(430315, casts, itemLoc)
-      else
-            print("No valid items in bags")
-      end
+	else
+		currentTime = _GetTime()
+		if currentTime - lastSortTime >= 10 then
+			_C_SortBags()
+			lastSortTime = currentTime
+		end
+	end
 end)
