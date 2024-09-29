@@ -3,6 +3,7 @@
 ## Dependencies: Auctionator
 ## SavedVariables: PriceMemory
 ## SavedVariables: QuantityMemory
+## SavedVariables: BaitMemory
 core.lua
 thauma.lua
 greenDe.lua
