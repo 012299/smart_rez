@@ -25,7 +25,7 @@ local function setupMerch()
 	local ixCore = nil
 
 	for ix = 1, GetMerchantNumItems() do
-		itemInfo = GetMerchantItemInfo(ix)
+		local itemInfo = GetMerchantItemInfo(ix)
 		if itemInfo == pepper then
 			ixPepper = ix
 		elseif itemInfo == coredust then
@@ -33,6 +33,18 @@ local function setupMerch()
 		end
 	end
 	return ixPepper, ixCore
+end
+
+local function buyIngr(amount, ix)
+	if amount > 1000 then
+		local purchases = math.floor(amount / 1000)
+		leftover = amount - purchases * 1000
+		for i = 1, purchases do
+			BuyMerchantItem(ix, 1000)
+		end
+		amount = amount - purchases * 100
+	end
+	BuyMerchantItem(ix, amount)
 end
 
 local btn = CreateFrame("Button", "BelledarCountBtn", UIParent, "SecureActionButtonTemplate")
@@ -47,7 +59,9 @@ btn:SetScript("OnClick", function()
 	local coreBuy = getReq(coreID, coreReq, totalCrafts)
 	if pepperBuy >= 1 or coreBuy >= 1 then
 		local ixPepper, ixCore = setupMerch()
-		BuyMerchantItem(ixPepper, pepperBuy)
-		BuyMerchantItem(ixCore, coreBuy)
+		buyIngr(pepperBuy, ixPepper)
+		buyIngr(coreBuy, ixCore)
+		--BuyMerchantItem(ixPepper, pepperBuy)
+		--BuyMerchantItem(ixCore, coreBuy)
 	end
 end)

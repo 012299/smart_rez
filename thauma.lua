@@ -3,7 +3,9 @@ local _C_GetContainerItemInfo = _G["C_Container"]["GetContainerItemInfo"]
 local _C_SortBags = _G["C_Container"]["SortBags"]
 local _C_TradeSkillUI_CraftSalvage = _G["C_TradeSkillUI"]["CraftSalvage"]
 local _ItemLocation = _G["ItemLocation"]
+local _C_Item_GetItemCount = _G["C_Item"]["GetItemCount"]
 local _GetTime = _G["GetTime"]
+
 local _UnitCastingInfo = _G["UnitCastingInfo"]
 
 local salvageItem = ItemLocation:CreateEmpty()
