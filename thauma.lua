@@ -9,6 +9,7 @@ local _GetTime = _G["GetTime"]
 local _UnitCastingInfo = _G["UnitCastingInfo"]
 
 local salvageItem = ItemLocation:CreateEmpty()
+ThaumaFrame = CreateFrame("Frame")
 
 local cookingID = 445118
 local prospectID = 434018
@@ -41,7 +42,7 @@ local castToStack = {
 }
 
 local function findItem()
-	for bag = BACKPACK_CONTAINER, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
+	for bag = 1, NUM_TOTAL_EQUIPPED_BAG_SLOTS do
 		for slot = 1, _C_GetContainerNumSlots(bag) do
 			local itemInfo = _C_GetContainerItemInfo(bag, slot)
 			if itemInfo then
@@ -60,34 +61,45 @@ end
 
 local lastSortTime = 0
 local currentTime = _GetTime()
-local blockButtonTime = _GetTime()
-local castStartTime, castEndTime = nil, nil
-local unBlockButton = _GetTime()
+local castStartTime, castEndTime = 0, 0
+ThaumaFrame.unBlockButton = _GetTime()
 
-local btn = CreateFrame("Button", "thaumaButton", UIParent, "SecureActionButtonTemplate")
+ThaumaFrame.btn = CreateFrame("Button", "thaumaButton", UIParent, "SecureActionButtonTemplate")
 -- sort bags before we create the button
 _C_SortBags()
-btn:RegisterForClicks("AnyUp", "AnyDown")
-btn:SetScript("OnClick", function()
-	if unBlockButton > _GetTime() then
+ThaumaFrame.btn:RegisterForClicks("AnyUp", "AnyDown")
+ThaumaFrame.btn:SetScript("OnClick", function()
+	if ThaumaFrame.unBlockButton > _GetTime() then
 		return
 	end
 	local castID, casts = findItem()
 	if castID then
+		ThaumaFrame:RegisterEvents()
 		currentTime = _GetTime()
 		_C_TradeSkillUI_CraftSalvage(castID, casts, salvageItem)
-		castStartTime, castEndTime = select(4, _UnitCastingInfo("player"))
-		if not castStartTime then
-			-- cast not found, block for 2seconds to prevent spam
-			unBlockButton = _GetTime() + 2
-		else
-			unBlockButton = _GetTime() + ((castEndTime - castStartTime) / 1000) * casts + 1
-		end
+		castStartTime = select(4, _UnitCastingInfo("player")) or 0
+		castEndTime = select(5, _UnitCastingInfo("player")) or 0
+		ThaumaFrame.unBlockButton = _GetTime() + ((castEndTime - castStartTime) / 1000) * casts
 	else
 		currentTime = _GetTime()
+		ThaumaFrame:UnregisterAllEvents()
 		if currentTime - lastSortTime >= 10 then
 			_C_SortBags()
 			lastSortTime = currentTime
 		end
 	end
 end)
+
+function ThaumaFrame:RegisterEvents()
+    self:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+    self:SetScript("OnEvent", function(_, eventName, eventData)
+        if eventName == "UNIT_SPELLCAST_INTERRUPTED" then
+			local target = eventData
+			if target == "player" then
+				ThaumaFrame.unBlockButton = _GetTime()
+				print("INTERRUPTED")
+				ThaumaFrame:UnregisterAllEvents()
+			end
+    	end
+    end)
+end
