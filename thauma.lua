@@ -61,7 +61,7 @@ end
 
 local lastSortTime = 0
 local currentTime = _GetTime()
-local castStartTime, castEndTime = 0, 0
+local castStartTime, castEndTime = nil, nil
 ThaumaFrame.unBlockButton = _GetTime()
 
 ThaumaFrame.btn = CreateFrame("Button", "thaumaButton", UIParent, "SecureActionButtonTemplate")
@@ -69,17 +69,20 @@ ThaumaFrame.btn = CreateFrame("Button", "thaumaButton", UIParent, "SecureActionB
 _C_SortBags()
 ThaumaFrame.btn:RegisterForClicks("AnyUp", "AnyDown")
 ThaumaFrame.btn:SetScript("OnClick", function()
+	print(ThaumaFrame.unBlockButton - _GetTime())
 	if ThaumaFrame.unBlockButton > _GetTime() then
 		return
 	end
 	local castID, casts = findItem()
+	casts = 1
 	if castID then
 		ThaumaFrame:RegisterEvents()
 		currentTime = _GetTime()
 		_C_TradeSkillUI_CraftSalvage(castID, casts, salvageItem)
-		castStartTime = select(4, _UnitCastingInfo("player")) or 0
-		castEndTime = select(5, _UnitCastingInfo("player")) or 0
-		ThaumaFrame.unBlockButton = _GetTime() + ((castEndTime - castStartTime) / 1000) * casts
+		castStartTime, castEndTime = select(4, _UnitCastingInfo("player"))
+		if castStartTime and castEndTime then
+			ThaumaFrame.unBlockButton = _GetTime() + ((castEndTime - castStartTime) / 1000) * casts
+		end
 	else
 		currentTime = _GetTime()
 		ThaumaFrame:UnregisterAllEvents()
