@@ -1,3 +1,4 @@
+local _C_Item_GetItemCount = _G["C_Item"]["GetItemCount"]
 local steakID = 222738
 local pepperID = 222696
 local coreID = 222697
@@ -12,7 +13,7 @@ local coredust = "Coreway Dust"
 
 local function getReq(reqID, reqAmt, crafts)
 	local totalReq = reqAmt * crafts
-	local invAmount = GetItemCount(reqID, true, nil, true)
+	local invAmount = _C_Item_GetItemCount(reqID, true, nil, true)
 	if invAmount < totalReq then
 		return totalReq - invAmount
 	else
@@ -51,7 +52,7 @@ local btn = CreateFrame("Button", "BelledarCountBtn", UIParent, "SecureActionBut
 -- sort bags before we create the button
 btn:RegisterForClicks("AnyUp", "AnyDown")
 btn:SetScript("OnClick", function()
-	local totalCrafts = math.floor(GetItemCount(steakID, true, nil, true) / steakReq)
+	local totalCrafts = math.floor(_C_Item_GetItemCount(steakID, true, nil, true) / steakReq)
 	if totalCrafts < 1 then
 		return
 	end

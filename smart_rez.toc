@@ -4,6 +4,7 @@
 ## SavedVariables: PriceMemory
 ## SavedVariables: QuantityMemory
 ## SavedVariables: BaitMemory
+reagents.lua
 core.lua
 thauma.lua
 greenDe.lua
